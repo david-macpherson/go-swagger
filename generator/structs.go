@@ -422,6 +422,14 @@ func (g *GenParameter) IsFileParam() bool {
 	return g.SwaggerType == "file"
 }
 
+// IsDisableMultiParams returns true if x-go-disable-parse-multi-form exists on the file param
+func (g *GenParameter) IsDisableMultiParams() bool {
+	if _, ok := g.Extensions[xDisableParseMultiForm]; ok {
+		return true
+	}
+	return false
+}
+
 // ItemsDepth returns a string "items.items..." with as many items as the level of nesting of the array.
 // For a parameter object, it always returns "".
 func (g *GenParameter) ItemsDepth() string {
@@ -608,19 +616,20 @@ type GenOperation struct {
 	Responses        GenStatusCodeResponses
 	DefaultResponse  *GenResponse
 
-	Params               GenParameters
-	QueryParams          GenParameters
-	PathParams           GenParameters
-	HeaderParams         GenParameters
-	FormParams           GenParameters
-	HasQueryParams       bool
-	HasPathParams        bool
-	HasHeaderParams      bool
-	HasFormParams        bool
-	HasFormValueParams   bool
-	HasFileParams        bool
-	HasBodyParams        bool
-	HasStreamingResponse bool
+	Params                   GenParameters
+	QueryParams              GenParameters
+	PathParams               GenParameters
+	HeaderParams             GenParameters
+	FormParams               GenParameters
+	HasQueryParams           bool
+	HasPathParams            bool
+	HasHeaderParams          bool
+	HasFormParams            bool
+	HasFormValueParams       bool
+	HasFileParams            bool
+	HasBodyParams            bool
+	HasStreamingResponse     bool
+	HasDisableParseMultiForm bool
 
 	Schemes              []string
 	ExtraSchemes         []string
