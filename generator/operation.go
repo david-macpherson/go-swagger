@@ -318,7 +318,7 @@ func (b *codeGenOpBuilder) MakeOperation() (GenOperation, error) {
 
 	operation := b.Operation
 	var params, qp, pp, hp, fp GenParameters
-	var hasQueryParams, hasPathParams, hasHeaderParams, hasFormParams, hasFileParams, hasFormValueParams, hasBodyParams bool
+	var hasQueryParams, hasPathParams, hasHeaderParams, hasFormParams, hasFileParams, hasFormValueParams, hasBodyParams, hasDisableParseMultiForm bool
 	paramsForOperation := b.Analyzed.ParamsFor(b.Method, b.Path)
 
 	idMapping, timeoutName := paramMappings(paramsForOperation)
@@ -334,6 +334,7 @@ func (b *codeGenOpBuilder) MakeOperation() (GenOperation, error) {
 			qp = append(qp, cp)
 		}
 		if cp.IsFormParam() {
+			hasDisableParseMultiForm = cp.IsDisableMultiParams()
 			if p.Type == file {
 				hasFileParams = true
 			}
@@ -459,54 +460,55 @@ func (b *codeGenOpBuilder) MakeOperation() (GenOperation, error) {
 			Copyright:        b.GenOpts.Copyright,
 			TargetImportPath: b.GenOpts.LanguageOpts.baseImport(b.GenOpts.Target),
 		},
-		Package:              b.GenOpts.LanguageOpts.ManglePackageName(b.APIPackage, defaultOperationsTarget),
-		PackageAlias:         b.APIPackageAlias,
-		RootPackage:          b.RootAPIPackage,
-		Name:                 b.Name,
-		Method:               b.Method,
-		Path:                 b.Path,
-		BasePath:             b.BasePath,
-		Tags:                 operation.Tags,
-		UseTags:              len(operation.Tags) > 0 && !b.GenOpts.SkipTagPackages,
-		Description:          trimBOM(operation.Description),
-		ReceiverName:         receiver,
-		DefaultImports:       b.DefaultImports,
-		Imports:              b.Imports,
-		Params:               params,
-		Summary:              trimBOM(operation.Summary),
-		QueryParams:          qp,
-		PathParams:           pp,
-		HeaderParams:         hp,
-		FormParams:           fp,
-		HasQueryParams:       hasQueryParams,
-		HasPathParams:        hasPathParams,
-		HasHeaderParams:      hasHeaderParams,
-		HasFormParams:        hasFormParams,
-		HasFormValueParams:   hasFormValueParams,
-		HasFileParams:        hasFileParams,
-		HasBodyParams:        hasBodyParams,
-		HasStreamingResponse: hasStreamingResponse,
-		Authorized:           b.Authed,
-		Security:             b.makeSecurityRequirements(receiver), // resolved security requirements, for codegen
-		SecurityDefinitions:  b.makeSecuritySchemes(receiver),
-		SecurityRequirements: securityRequirements(operation.Security), // raw security requirements, for doc
-		Principal:            b.Principal,
-		Responses:            responses,
-		DefaultResponse:      defaultResponse,
-		SuccessResponse:      successResponse,
-		SuccessResponses:     successResponses,
-		ExtraSchemas:         gatherExtraSchemas(b.ExtraSchemas),
-		Schemes:              schemeOrDefault(schemes, b.DefaultScheme),
-		SchemeOverrides:      originalSchemes,      // raw operation schemes, for doc
-		ProducesMediaTypes:   produces,             // resolved produces, for codegen
-		ConsumesMediaTypes:   consumes,             // resolved consumes, for codegen
-		Produces:             operation.Produces,   // for doc
-		Consumes:             operation.Consumes,   // for doc
-		ExtraSchemes:         extraSchemes,         // resolved schemes, for codegen
-		ExtraSchemeOverrides: originalExtraSchemes, // raw operation extra schemes, for doc
-		TimeoutName:          timeoutName,
-		Extensions:           operation.Extensions,
-		StrictResponders:     b.GenOpts.StrictResponders,
+		Package:                  b.GenOpts.LanguageOpts.ManglePackageName(b.APIPackage, defaultOperationsTarget),
+		PackageAlias:             b.APIPackageAlias,
+		RootPackage:              b.RootAPIPackage,
+		Name:                     b.Name,
+		Method:                   b.Method,
+		Path:                     b.Path,
+		BasePath:                 b.BasePath,
+		Tags:                     operation.Tags,
+		UseTags:                  len(operation.Tags) > 0 && !b.GenOpts.SkipTagPackages,
+		Description:              trimBOM(operation.Description),
+		ReceiverName:             receiver,
+		DefaultImports:           b.DefaultImports,
+		Imports:                  b.Imports,
+		Params:                   params,
+		Summary:                  trimBOM(operation.Summary),
+		QueryParams:              qp,
+		PathParams:               pp,
+		HeaderParams:             hp,
+		FormParams:               fp,
+		HasQueryParams:           hasQueryParams,
+		HasPathParams:            hasPathParams,
+		HasHeaderParams:          hasHeaderParams,
+		HasFormParams:            hasFormParams,
+		HasFormValueParams:       hasFormValueParams,
+		HasFileParams:            hasFileParams,
+		HasBodyParams:            hasBodyParams,
+		HasStreamingResponse:     hasStreamingResponse,
+		HasDisableParseMultiForm: hasDisableParseMultiForm,
+		Authorized:               b.Authed,
+		Security:                 b.makeSecurityRequirements(receiver), // resolved security requirements, for codegen
+		SecurityDefinitions:      b.makeSecuritySchemes(receiver),
+		SecurityRequirements:     securityRequirements(operation.Security), // raw security requirements, for doc
+		Principal:                b.Principal,
+		Responses:                responses,
+		DefaultResponse:          defaultResponse,
+		SuccessResponse:          successResponse,
+		SuccessResponses:         successResponses,
+		ExtraSchemas:             gatherExtraSchemas(b.ExtraSchemas),
+		Schemes:                  schemeOrDefault(schemes, b.DefaultScheme),
+		SchemeOverrides:          originalSchemes,      // raw operation schemes, for doc
+		ProducesMediaTypes:       produces,             // resolved produces, for codegen
+		ConsumesMediaTypes:       consumes,             // resolved consumes, for codegen
+		Produces:                 operation.Produces,   // for doc
+		Consumes:                 operation.Consumes,   // for doc
+		ExtraSchemes:             extraSchemes,         // resolved schemes, for codegen
+		ExtraSchemeOverrides:     originalExtraSchemes, // raw operation extra schemes, for doc
+		TimeoutName:              timeoutName,
+		Extensions:               operation.Extensions,
+		StrictResponders:         b.GenOpts.StrictResponders,
 
 		PrincipalIsNullable: b.GenOpts.PrincipalIsNullable(),
 		ExternalDocs:        trimExternalDoc(operation.ExternalDocs),

@@ -415,15 +415,18 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}Params) BindRequest(r *http.Requ
   qs := runtime.Values(r.URL.Query())
 {{- end }}
 
-{{- if .HasFormParams }}
+{{- if .HasFormParams}}
 
-  if err := r.ParseMultipartForm({{ pascalize .Name }}MaxParseMemory); err != nil {
-    if err != http.ErrNotMultipart {
-            return errors.New(400,"%v",err)
-        } else if err := r.ParseForm(); err != nil {
-            return errors.New(400,"%v",err)
-        }
-	}
+  {{- if not .HasDisableParseMultiForm}}
+    if err := r.ParseMultipartForm({{ pascalize .Name }}MaxParseMemory); err != nil {
+      if err != http.ErrNotMultipart {
+              return errors.New(400,"%v",err)
+          } else if err := r.ParseForm(); err != nil {
+              return errors.New(400,"%v",err)
+          }
+    }
+  {{- end}}
+
   {{- if .HasFormValueParams }}
   fds := runtime.Values(r.Form)
   {{- end }}
@@ -447,8 +450,8 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}Params) BindRequest(r *http.Requ
   if err := {{ .ReceiverName }}.bind{{ pascalize .ID }}(r.Header[http.CanonicalHeaderKey({{ .Path }})], true, route.Formats); err != nil {
     res = append(res, err)
   }
-    {{- else if .IsFormParam }}
-      {{- if .IsFileParam }}
+    {{- else if and .IsFormParam (not .IsDisableMultiParams)}}
+      {{- if and .IsFileParam}}
 
   {{ camelize .Name }}, {{ camelize .Name }}Header, err := r.FormFile({{ .Path }})
   if err != nil {{ if .IsNullable }}&& err != http.ErrMissingFile{{ end }}{
