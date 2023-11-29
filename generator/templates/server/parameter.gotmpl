@@ -427,7 +427,7 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}Params) BindRequest(r *http.Requ
     }
   {{- end}}
 
-  {{- if .HasFormValueParams }}
+  {{- if and .HasFormValueParams (not .HasDisableParseMultiForm) }}
   fds := runtime.Values(r.Form)
   {{- end }}
 {{- end }}
@@ -469,11 +469,12 @@ func ({{ .ReceiverName }} *{{ pascalize .Name }}Params) BindRequest(r *http.Requ
     {{ .ReceiverName }}.{{ pascalize .Name }} = &runtime.File{Data: {{ camelize .Name }}, Header: {{ camelize .Name }}Header}
   }
       {{- else }}
-
+  
   fd{{ pascalize .Name }}, fdhk{{ pascalize .Name }}, _ := fds.GetOK({{ .Path }})
   if err := {{ .ReceiverName }}.bind{{ pascalize .ID }}(fd{{ pascalize .Name }}, fdhk{{ pascalize .Name }}, route.Formats); err != nil {
     res = append(res, err)
   }
+  
       {{- end }}
     {{- end }}
   {{- else if .IsArray }}
