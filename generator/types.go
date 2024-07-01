@@ -346,7 +346,6 @@ func (t *typeResolver) inferAliasing(result *resolvedType, _ *spec.Schema, isAno
 }
 
 func (t *typeResolver) resolveFormat(schema *spec.Schema, isAnonymous bool, isRequired bool) (returns bool, result resolvedType, err error) {
-
 	if schema.Format != "" {
 		// defaults to string
 		result.SwaggerType = str
@@ -402,7 +401,6 @@ func (t *typeResolver) resolveFormat(schema *spec.Schema, isAnonymous bool, isRe
 //
 // The interpretation of Required as a mean to make a type nullable is carried out elsewhere.
 func (t *typeResolver) isNullable(schema *spec.Schema) bool {
-
 	if nullable, ok := t.isNullableOverride(schema); ok {
 		return nullable
 	}
@@ -1001,8 +999,8 @@ func warnSkipValidation(types interface{}) func(string, interface{}) {
 func guardValidations(tpe string, schema interface {
 	Validations() spec.SchemaValidations
 	SetValidations(spec.SchemaValidations)
-}, types ...string) {
-
+}, types ...string,
+) {
 	v := schema.Validations()
 	if len(types) == 0 {
 		types = []string{tpe}
@@ -1050,7 +1048,8 @@ func guardValidations(tpe string, schema interface {
 func guardFormatConflicts(format string, schema interface {
 	Validations() spec.SchemaValidations
 	SetValidations(spec.SchemaValidations)
-}) {
+},
+) {
 	v := schema.Validations()
 	msg := fmt.Sprintf("for format %q", format)
 

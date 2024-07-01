@@ -92,7 +92,7 @@ func TestMakeResponseHeaderDefaultValues(t *testing.T) {
 	b, err := opBuilder("getTasks", "")
 	require.NoError(t, err)
 
-	var testCases = []struct {
+	testCases := []struct {
 		name         string      // input
 		typeStr      string      // expected type
 		defaultValue interface{} // expected result
@@ -298,6 +298,7 @@ func methodPathOpBuilder(method, path, fname string) (codeGenOpBuilder, error) {
 		Target:        ".",
 		Operation:     *op,
 		Doc:           specDoc,
+		PristineDefs:  specDoc.Pristine(),
 		Analyzed:      analyzed,
 		Authed:        false,
 		ExtraSchemas:  make(map[string]GenSchema),
@@ -372,6 +373,7 @@ func opBuilderWithOpts(name, fname string, o *GenOpts) (codeGenOpBuilder, error)
 		Target:        ".",
 		Operation:     *op,
 		Doc:           specDoc,
+		PristineDefs:  specDoc.Pristine(),
 		Analyzed:      analyzed,
 		Authed:        false,
 		ExtraSchemas:  make(map[string]GenSchema),
@@ -822,7 +824,7 @@ func TestGenClientIssue890_ValidationFalseFlatteningTrue(t *testing.T) {
 	opts.FlattenOpts.Minimal = false
 	// Testing this is enough as there is only one operation which is specified as $ref.
 	// If this doesn't get resolved then there will be an error definitely.
-	assert.NoError(t, GenerateClient("foo", nil, nil, opts))
+	require.NoError(t, GenerateClient("foo", nil, nil, opts))
 }
 
 func TestGenServerIssue890_ValidationFalseFlattenFalse(t *testing.T) {
@@ -855,7 +857,7 @@ func TestGenServerIssue890_ValidationFalseFlattenFalse(t *testing.T) {
 	opts.FlattenOpts.Minimal = true
 	_, err := newAppGenerator("JsonRefOperation", nil, nil, opts)
 	// if flatten is not set, expand takes over so this would resume normally
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestGenClientIssue890_ValidationFalseFlattenFalse(t *testing.T) {
@@ -874,7 +876,7 @@ func TestGenClientIssue890_ValidationFalseFlattenFalse(t *testing.T) {
 	// Testing this is enough as there is only one operation which is specified as $ref.
 	// If this doesn't get resolved then there will be an error definitely.
 	// New: Now if flatten is false, expand takes over so server generation should resume normally
-	assert.NoError(t, GenerateClient("foo", nil, nil, opts))
+	require.NoError(t, GenerateClient("foo", nil, nil, opts))
 }
 
 func TestGenServerIssue890_ValidationTrueFlattenFalse(t *testing.T) {
@@ -908,7 +910,7 @@ func TestGenServerIssue890_ValidationTrueFlattenFalse(t *testing.T) {
 
 	_, err := newAppGenerator("JsonRefOperation", nil, nil, opts)
 	// now if flatten is false, expand takes over so server generation should resume normally
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestGenServerWithTemplate(t *testing.T) {
@@ -1003,7 +1005,7 @@ func TestGenClientIssue890_ValidationTrueFlattenFalse(t *testing.T) {
 	// Testing this is enough as there is only one operation which is specified as $ref.
 	// If this doesn't get resolved then there will be an error definitely.
 	// same here: now if flatten doesn't resume, expand takes over
-	assert.NoError(t, GenerateClient("foo", nil, nil, opts))
+	require.NoError(t, GenerateClient("foo", nil, nil, opts))
 }
 
 // This tests that securityDefinitions generate stable code
@@ -1170,7 +1172,7 @@ func TestGenSecurityRequirements(t *testing.T) {
 	b.Security = b.Analyzed.SecurityRequirementsFor(&b.Operation)
 	genRequirements := b.makeSecurityRequirements("o")
 	assert.NotNil(t, genRequirements)
-	assert.Len(t, genRequirements, 0)
+	assert.Empty(t, genRequirements)
 
 	operation = "nosecOp"
 	b, err = opBuilder(operation, "../fixtures/bugs/1214/fixture-1214-2.yaml")
@@ -1222,11 +1224,11 @@ func TestGenerateServerOperation(t *testing.T) {
 
 	// check expected files are generated and that's it
 	_, err := os.Stat(filepath.Join(tgt, "tasks", "create_task.go"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat(filepath.Join(tgt, "tasks", "create_task_parameters.go"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat(filepath.Join(tgt, "tasks", "create_task_responses.go"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	origStdout := os.Stdout
 	defer func() {
@@ -1236,9 +1238,9 @@ func TestGenerateServerOperation(t *testing.T) {
 	o.DumpData = true
 	// just checks this does not fail
 	err = GenerateServerOperation([]string{"createTask"}, o)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat(filepath.Join(tgt, "stdout"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 // This tests that mimetypes generate stable code
@@ -1340,29 +1342,29 @@ func TestGenServer_StrictAdditionalProperties(t *testing.T) {
 }
 
 func makeClientTimeoutNameTest() []struct {
-	seenIds  map[string]interface{}
+	seenIDs  map[string]interface{}
 	name     string
 	expected string
 } {
 	return []struct {
-		seenIds  map[string]interface{}
+		seenIDs  map[string]interface{}
 		name     string
 		expected string
 	}{
 		{
-			seenIds:  nil,
+			seenIDs:  nil,
 			name:     "witness",
 			expected: "witness",
 		},
 		{
-			seenIds: map[string]interface{}{
+			seenIDs: map[string]interface{}{
 				"id": true,
 			},
 			name:     "timeout",
 			expected: "timeout",
 		},
 		{
-			seenIds: map[string]interface{}{
+			seenIDs: map[string]interface{}{
 				"timeout":        true,
 				"requesttimeout": true,
 			},
@@ -1370,7 +1372,7 @@ func makeClientTimeoutNameTest() []struct {
 			expected: "httpRequestTimeout",
 		},
 		{
-			seenIds: map[string]interface{}{
+			seenIDs: map[string]interface{}{
 				"timeout":            true,
 				"requesttimeout":     true,
 				"httprequesttimeout": true,
@@ -1382,7 +1384,7 @@ func makeClientTimeoutNameTest() []struct {
 			expected: "operTimeout",
 		},
 		{
-			seenIds: map[string]interface{}{
+			seenIDs: map[string]interface{}{
 				"timeout":            true,
 				"requesttimeout":     true,
 				"httprequesttimeout": true,
@@ -1404,7 +1406,7 @@ func TestRenameTimeout(t *testing.T) {
 		testCase := toPin
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equalf(t, testCase.expected, renameTimeout(testCase.seenIds, testCase.name), "unexpected deconflicting value [%d]", i)
+			assert.Equalf(t, testCase.expected, renameTimeout(testCase.seenIDs, testCase.name), "unexpected deconflicting value [%d]", i)
 		})
 	}
 }
